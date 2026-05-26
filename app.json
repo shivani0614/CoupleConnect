@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "CoupleConnect",
+    "slug": "couple-connect",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#8B1A28"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.yourname.coupleconnect",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Used to calculate distance between you and your partner."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#8B1A28"
+      },
+      "package": "com.yourname.coupleconnect",
+      "permissions": [
+        "ACCESS_FINE_LOCATION"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-sharing"
+    ]
+  }
+}
