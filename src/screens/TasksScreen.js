@@ -9,7 +9,8 @@ import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { COLORS, SPACING, RADIUS, SHADOW } from '../theme';
-import { ACTIVITIES, COUPLE, getPartnerName } from '../data';
+import { ACTIVITIES, COUPLE } from '../data';
+import { usePartner } from '../hooks/usePartner';
 import { useCouple } from '../context/CoupleContext';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -20,10 +21,12 @@ export default function TasksScreen() {
   const insets = useSafeAreaInsets();
   const nav    = useNavigation();
   const { user } = useAuth();
+  const { myName, partnerName } = usePartner();
   const { tasks, toggleTask, addTask, deleteTask, sendMessage } = useCouple();
   const [newTask, setNewTask] = useState('');
   const [who,     setWho]     = useState('Both');
-  const partnerName = getPartnerName(user?.name);
+  // const partnerName = getPartnerName(user?.name);
+
 
   const done  = tasks.filter(t => t.done).length;
   const pct   = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
@@ -50,7 +53,7 @@ export default function TasksScreen() {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.root}>
         <AppHeader
-          name1={user?.name || COUPLE.name1} name2={partnerName}
+          name1={myName} name2={partnerName}
           subtitle="Shared to-do & household goals"
         />
 
@@ -117,7 +120,7 @@ export default function TasksScreen() {
             {/* Who selector */}
             <View style={styles.whoRow}>
               <Text style={styles.whoLbl}>Assign to: </Text>
-              {['Both', user?.name || COUPLE.name1, partnerName].map(w => (
+              {['Both', myName, partnerName].map(w => (
                 <TouchableOpacity
                   key={w}
                   onPress={() => setWho(w)}

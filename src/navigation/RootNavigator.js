@@ -14,6 +14,7 @@ import ChatScreen      from '../screens/ChatScreen';
 import UsScreen        from '../screens/UsScreen';
 import ProfileScreen   from '../screens/ProfileScreen';
 import AdminScreen     from '../screens/AdminScreen';
+import HashtagScreen from '../screens/HashtagScreen';
 import { useAuth } from '../context/AuthContext';
 
 const Tab = createBottomTabNavigator();
@@ -25,7 +26,7 @@ const TABS = [
   { name: 'Dates', label: 'Dates', icon: 'calendar-month-outline', screen: DatesScreen },
   { name: 'Chat',  label: 'Chat',  icon: 'chat-outline',          screen: ChatScreen  },
   { name: 'Us', label: 'Profile', icon: 'account-circle-outline', screen: ProfileScreen },
-  
+  { name: 'Hashtags', label: 'Hashtags', icon: 'tag-outline', screen: HashtagScreen },
 ];
 
 function TabIcon({ icon, label, focused }) {

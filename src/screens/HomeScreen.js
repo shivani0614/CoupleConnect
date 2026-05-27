@@ -16,6 +16,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { COLORS, SPACING, RADIUS, SHADOW } from '../theme';
 import { QUESTIONS, COUPLE } from '../data';
+import { usePartner } from '../hooks/usePartner';
 import { useCouple } from '../context/CoupleContext';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -98,8 +99,10 @@ export default function HomeScreen() {
     outputRange: [0, -10, 0],
   });
 
-  const currentName = user?.name || COUPLE.name1;
-  const partnerName = user?.name === COUPLE.name1 ? COUPLE.name2 : COUPLE.name1;
+  // const currentName = user?.name || COUPLE.name1;
+  // const partnerName = user?.name === COUPLE.name1 ? COUPLE.name2 : COUPLE.name1;
+  const { myName, partnerName } = usePartner();
+  // const { user } = useAuth();
   const anniDays = daysUntil(new Date(new Date(COUPLE.marriedSince).setFullYear(new Date().getFullYear())));
   const married = daysSince(COUPLE.marriedSince);
   const visitDays = daysUntil(COUPLE.nextVisit);
@@ -132,7 +135,7 @@ export default function HomeScreen() {
             <View style={styles.heroTopRow}>
               <View>
                 <Text style={styles.heroLabel}>Couple Connect</Text>
-                <Text style={styles.heroTitle}>Hi {currentName}, celebrate every moment with {partnerName}</Text>
+                <Text style={styles.heroTitle}>Hi {myName}, celebrate every moment with {partnerName}</Text>
               </View>
               <View style={styles.heroPill}>
                 <Text style={styles.heroPillText}>{COUPLE.distanceKm} km apart</Text>
