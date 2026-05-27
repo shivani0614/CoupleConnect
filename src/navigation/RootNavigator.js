@@ -12,6 +12,7 @@ import TasksScreen     from '../screens/TasksScreen';
 import DatesScreen     from '../screens/DatesScreen';
 import ChatScreen      from '../screens/ChatScreen';
 import UsScreen        from '../screens/UsScreen';
+import ProfileScreen   from '../screens/ProfileScreen';
 import AdminScreen     from '../screens/AdminScreen';
 import { useAuth } from '../context/AuthContext';
 
@@ -23,7 +24,8 @@ const TABS = [
   { name: 'Tasks', label: 'Tasks', icon: 'clipboard-text-outline', screen: TasksScreen },
   { name: 'Dates', label: 'Dates', icon: 'calendar-month-outline', screen: DatesScreen },
   { name: 'Chat',  label: 'Chat',  icon: 'chat-outline',          screen: ChatScreen  },
-  { name: 'Us',    label: 'Profile', icon: 'account-circle-outline', screen: UsScreen    },
+  { name: 'Us', label: 'Profile', icon: 'account-circle-outline', screen: ProfileScreen },
+  
 ];
 
 function TabIcon({ icon, label, focused }) {

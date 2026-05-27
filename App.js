@@ -9,6 +9,7 @@ import LoginScreen from './src/screens/LoginScreen';
 import LandingScreen from './src/screens/LandingScreen';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { CoupleProvider } from './src/context/CoupleContext';
+import { ProfileProvider } from './src/context/ProfileContext';
 
 const Stack = createStackNavigator();
 
@@ -36,12 +37,14 @@ function AppContent() {
   }
 
   return (
+    <ProfileProvider>
     <CoupleProvider>
       <NavigationContainer>
         <StatusBar style="light" />
         <RootNavigator />
       </NavigationContainer>
     </CoupleProvider>
+    </ProfileProvider>
   );
 }
 
