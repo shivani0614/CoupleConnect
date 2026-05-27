@@ -1,87 +1,116 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, Dimensions, Animated, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  Animated,
+  TouchableOpacity,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { usePartner } from '../hooks/usePartner';
 
 const { width, height } = Dimensions.get('window');
 
-/* ---------- helpers ---------- */
+const COLS = 3;
+const COL_WIDTH = width / COLS;
+
+/* ---------------- COLORS ---------------- */
+
+const colors = [
+  '#ff6b6b',
+  '#feca57',
+  '#48dbfb',
+  '#1dd1a1',
+  '#5f27cd',
+  '#ff9ff3',
+  '#54a0ff',
+  '#ff9f43',
+];
+
+const pickColor = () =>
+  colors[Math.floor(Math.random() * colors.length)];
+
+/* ---------------- CLEAN ---------------- */
 
 const clean = (str = '') =>
   str.toLowerCase().replace(/[^a-z]/g, '');
 
-const splitName = (name) => {
-  const c = clean(name);
-  const mid = Math.floor(c.length / 2);
-  return [c.slice(0, mid), c.slice(mid)];
-};
+/* ---------------- SYLLABLES ---------------- */
+
+const syllables = [
+  'ra','shi','vi','na','ga','thu','sha','ka','lu','mi',
+  'di','ya','su','thi','lo','re','pa','ta','ne','ka'
+];
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-/* ---------- generator ---------- */
+/* ---------------- UNIQUE ---------------- */
 
-const generateHashtags = (a, b) => {
-  const aParts = splitName(a);
-  const bParts = splitName(b);
+const used = new Set();
 
-  const pool = [
-    `#${a}${b}`,
-    `#${b}${a}`,
-    `#${a}and${b}`,
-    `#forever${a}${b}`,
-    `#team${a}${b}`,
-    `#${a}x${b}`,
-    `#${aParts[0]}${bParts[1]}`,
-    `#${bParts[0]}${aParts[1]}`,
+const makeTag = (a, b) => {
+  const baseA = clean(a);
+  const baseB = clean(b);
+
+  const patterns = [
+    `${baseA}${baseB}`,
+    `${baseB}${baseA}`,
+    `${baseA}x${baseB}`,
+    `${baseA}and${baseB}`,
+    `forever${baseA}${baseB}`,
+    `love${baseA}${baseB}`,
+    `${baseA}${pick(syllables)}${baseB}`,
+    `${pick(syllables)}${baseA}${pick(syllables)}${baseB}`,
   ];
 
-  const extra = [];
-  for (let i = 0; i < 30; i++) {
-    const x = pick(aParts);
-    const y = pick(bParts);
-    extra.push(`#${x}${y}`);
+  let tag = '#' + pick(patterns);
+
+  while (used.has(tag)) {
+    tag = '#' + pick(patterns) + Math.floor(Math.random() * 9999);
   }
 
-  return [...pool, ...extra];
+  used.add(tag);
+  return tag;
 };
 
-/* ---------- FLOATING TAG ---------- */
+/* ---------------- GENERATE LANE ---------------- */
 
-const FloatingTag = ({ text, index }) => {
+const generateLane = (a, b, count = 90) => {
+  const list = [];
+  for (let i = 0; i < count; i++) {
+    list.push({
+      text: makeTag(a, b),
+      color: pickColor(),
+    });
+  }
+  return list;
+};
+
+/* ---------------- FLOATING TAG ---------------- */
+
+const FloatingTag = ({ text, color, laneIndex }) => {
   const anim = useRef(new Animated.Value(0)).current;
-  const floatX = useRef(new Animated.Value(0)).current;
+  const [hover, setHover] = useState(false);
 
-  const startX = Math.random() * (width - 80);
-  const startY = Math.random() * (height * 0.6);
+  const baseX =
+    laneIndex * COL_WIDTH +
+    10 +
+    Math.random() * (COL_WIDTH - 90);
+
+  const baseY = Math.random() * (height * 0.85);
 
   useEffect(() => {
-    // vertical slow float (up & down loop)
     Animated.loop(
       Animated.sequence([
         Animated.timing(anim, {
           toValue: 1,
-          duration: 3000 + Math.random() * 2000,
+          duration: 3500 + Math.random() * 2000,
           useNativeDriver: true,
         }),
         Animated.timing(anim, {
           toValue: 0,
-          duration: 3000 + Math.random() * 2000,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-
-    // slight horizontal drift
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(floatX, {
-          toValue: 1,
-          duration: 4000 + Math.random() * 3000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(floatX, {
-          toValue: 0,
-          duration: 4000 + Math.random() * 3000,
+          duration: 3500 + Math.random() * 2000,
           useNativeDriver: true,
         }),
       ])
@@ -90,44 +119,62 @@ const FloatingTag = ({ text, index }) => {
 
   const translateY = anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [startY, startY - 20], // gentle float up/down
+    outputRange: [baseY, baseY - 30],
   });
 
-  const translateX = floatX.interpolate({
+  const translateX = anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [startX, startX + 10], // tiny side drift
-  });
-
-  const opacity = anim.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [0.7, 1, 0.7],
+    outputRange: [baseX, baseX + 10],
   });
 
   return (
-    <Animated.View
-      style={[
-        styles.tag,
-        {
-          transform: [{ translateX }, { translateY }],
-          opacity,
-        },
-      ]}
-    >
-      <Text style={styles.text}>{text}</Text>
-    </Animated.View>
+    <View style={{ position: 'absolute' }}>
+
+      {/* POPUP PREVIEW */}
+      {hover && (
+        <View style={styles.popup}>
+          <Text style={styles.popupText}>{text}</Text>
+        </View>
+      )}
+
+      <Animated.View
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        onTouchStart={() => setHover(true)}
+        onTouchEnd={() => setHover(false)}
+        style={[
+          styles.tag,
+          {
+            backgroundColor: color,
+            transform: [{ translateX }, { translateY }],
+          },
+        ]}
+      >
+        <Text style={styles.text}>{text}</Text>
+      </Animated.View>
+
+    </View>
   );
 };
 
-/* ---------- SCREEN ---------- */
+/* ---------------- SCREEN ---------------- */
 
-export default function HashtagScreen() {
+export default function HashtagUniverseScreen() {
   const { myName, partnerName } = usePartner();
-  const [tags, setTags] = useState([]);
+
+  const [left, setLeft] = useState([]);
+  const [middle, setMiddle] = useState([]);
+  const [right, setRight] = useState([]);
 
   const generate = () => {
-    const list = generateHashtags(myName || 'love', partnerName || 'you');
-    const shuffled = list.sort(() => 0.5 - Math.random()).slice(0, 25);
-    setTags(shuffled);
+    used.clear();
+
+    const a = myName || 'shivani';
+    const b = partnerName || 'goutham';
+
+    setLeft(generateLane('shivani', a));
+    setMiddle(generateLane(a, b));
+    setRight(generateLane('goutham', b));
   };
 
   useEffect(() => {
@@ -139,17 +186,47 @@ export default function HashtagScreen() {
 
       {/* HEADER */}
       <View style={styles.header}>
-        <Text style={styles.title}>Hashtag Generator</Text>
+        <Text style={styles.title}>Name Universe</Text>
 
         <TouchableOpacity onPress={generate} style={styles.btn}>
-          <Text style={styles.btnText}>Generate</Text>
+          <Text style={styles.btnText}>Regenerate</Text>
         </TouchableOpacity>
       </View>
 
-      {/* FLOATING AREA */}
+      {/* LABELS */}
+      <View style={styles.labels}>
+        <Text style={styles.label}>Shivani</Text>
+        <Text style={styles.label}>Couple</Text>
+        <Text style={styles.label}>Goutham</Text>
+      </View>
+
+      {/* CANVAS */}
       <View style={styles.canvas}>
-        {tags.map((t, i) => (
-          <FloatingTag key={`${t}-${i}`} text={t} index={i} />
+        {left.map((t, i) => (
+          <FloatingTag
+            key={`l${i}`}
+            text={t.text}
+            color={t.color}
+            laneIndex={0}
+          />
+        ))}
+
+        {middle.map((t, i) => (
+          <FloatingTag
+            key={`m${i}`}
+            text={t.text}
+            color={t.color}
+            laneIndex={1}
+          />
+        ))}
+
+        {right.map((t, i) => (
+          <FloatingTag
+            key={`r${i}`}
+            text={t.text}
+            color={t.color}
+            laneIndex={2}
+          />
         ))}
       </View>
 
@@ -157,7 +234,7 @@ export default function HashtagScreen() {
   );
 }
 
-/* ---------- STYLES ---------- */
+/* ---------------- STYLES ---------------- */
 
 const styles = StyleSheet.create({
   container: {
@@ -169,7 +246,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
 
   title: {
@@ -180,8 +256,8 @@ const styles = StyleSheet.create({
 
   btn: {
     backgroundColor: '#C0394B',
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     borderRadius: 20,
   },
 
@@ -191,21 +267,55 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
+  labels: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 10,
+    marginBottom: 10,
+  },
+
+  label: {
+    color: '#aaa',
+    fontSize: 12,
+  },
+
   canvas: {
     flex: 1,
+    position: 'relative',
   },
 
   tag: {
     position: 'absolute',
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 24,
   },
 
   text: {
     color: '#fff',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
+  },
+
+  /* POPUP */
+  popup: {
+    position: 'absolute',
+    bottom: 55,
+    left: -40,
+    minWidth: 140,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    zIndex: 9999,
+    alignItems: 'center',
+  },
+
+  popupText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
   },
 });
