@@ -16,12 +16,9 @@ import { AppInput, PrimaryBtn, GhostBtn } from '../components/UI';
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
-  const { users, loginWithId, loginWithEmail, register } = useAuth();
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [name, setName] = useState('');
+  const { users, loginWithId, loginWithEmail } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleQuickLogin = async (id) => {
@@ -45,86 +42,35 @@ export default function LoginScreen() {
     }
   };
 
-  const handleRegister = async () => {
-    const trimmedName = name.trim();
-    const trimmedEmail = email.trim().toLowerCase();
-
-    if (!trimmedName || !trimmedEmail || !password || !confirmPassword) {
-      setError('Enter name, email and password.');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.');
-      return;
-    }
-
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
-      return;
-    }
-
-    const success = await register(trimmedName, trimmedEmail, password);
-    if (!success) {
-      setError('Unable to create account. Email may already be in use.');
-    }
-  };
-
-  const toggleMode = () => {
-    setError('');
-    setName('');
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
-    setIsRegistering((current) => !current);
-  };
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={[styles.root, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 20 }]}
     >
       <LinearGradient colors={COLORS.headerGrad} style={styles.hero}>
-        <Text style={styles.title}>{isRegistering ? 'Create account' : 'CoupleConnect'}</Text>
-        <Text style={styles.subtitle}>{isRegistering ? 'Sign up and start your love story' : 'Login to continue your love story'}</Text>
+        <Text style={styles.title}>CoupleConnect</Text>
+        <Text style={styles.subtitle}>Sign in as a user or admin to continue.</Text>
       </LinearGradient>
 
       <View style={styles.body}>
-        {!isRegistering ? (
-          <>
-            <Text style={styles.prompt}>Quick sign-in</Text>
-            {users.map((user) => (
-              <TouchableOpacity
-                key={user.id}
-                style={styles.userBtn}
-                activeOpacity={0.8}
-                onPress={() => handleQuickLogin(user.id)}
-              >
-                <Text style={styles.userName}>{user.name}</Text>
-                <Text style={styles.userHint}>{user.email}</Text>
-              </TouchableOpacity>
-            ))}
+        <Text style={styles.prompt}>Quick sign-in</Text>
+        {users.map((user) => (
+          <TouchableOpacity
+            key={user.id}
+            style={styles.userBtn}
+            activeOpacity={0.8}
+            onPress={() => handleQuickLogin(user.id)}
+          >
+            <Text style={styles.userName}>{user.name}</Text>
+            <Text style={styles.userHint}>{user.email}</Text>
+          </TouchableOpacity>
+        ))}
 
-            <View style={styles.dividerRow}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or sign in with email</Text>
-              <View style={styles.dividerLine} />
-            </View>
-          </>
-        ) : (
-          <Text style={styles.prompt}>Create a new account using your email</Text>
-        )}
-
-        {isRegistering && (
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Name</Text>
-            <AppInput
-              value={name}
-              onChangeText={setName}
-              placeholder="Your name"
-            />
-          </View>
-        )}
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>or sign in with email</Text>
+          <View style={styles.dividerLine} />
+        </View>
 
         <View style={styles.formGroup}>
           <Text style={styles.label}>Email</Text>
@@ -147,40 +93,19 @@ export default function LoginScreen() {
           />
         </View>
 
-        {isRegistering && (
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Confirm password</Text>
-            <AppInput
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-              placeholder="Repeat password"
-            />
-          </View>
-        )}
-
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
         <PrimaryBtn
-          title={isRegistering ? 'Create account' : 'Sign in'}
-          onPress={isRegistering ? handleRegister : handleLogin}
+          title="Sign in"
+          onPress={handleLogin}
           style={styles.signInBtn}
         />
 
-        {!isRegistering ? (
-          <GhostBtn
-            title="Need a hint?"
-            onPress={() => setError('Use alex@example.com or jordan@example.com with password love123')}
-            style={styles.hintBtn}
-          />
-        ) : null}
-
-        <View style={styles.switchRow}>
-          <Text style={styles.switchText}>{isRegistering ? 'Already have an account?' : "Don't have an account?"}</Text>
-          <TouchableOpacity onPress={toggleMode}>
-            <Text style={styles.switchLink}>{isRegistering ? 'Sign in' : 'Create account'}</Text>
-          </TouchableOpacity>
-        </View>
+        <GhostBtn
+          title="Need a hint?"
+          onPress={() => setError('Use admin@coupleconnect.com with password admin123')}
+          style={styles.hintBtn}
+        />
       </View>
     </KeyboardAvoidingView>
   );

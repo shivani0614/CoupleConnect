@@ -9,6 +9,7 @@ const STORAGE_ACCOUNTS_KEY = '@coupleconnect:accounts';
 const DEFAULT_USERS = [
   { id: 'alex', name: COUPLE.name1, email: 'alex@example.com', password: 'love123' },
   { id: 'jordan', name: COUPLE.name2, email: 'jordan@example.com', password: 'love123' },
+  { id: 'admin', name: 'Admin', email: 'admin@coupleconnect.com', password: 'admin123', isAdmin: true },
 ];
 
 function normalizeEmail(email) {
@@ -66,6 +67,33 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const deleteUser = useCallback(async (id) => {
+    const nextAccounts = storedAccounts.filter((account) => account.id !== id);
+    const success = await persistAccounts(nextAccounts);
+    return success;
+  }, [persistAccounts, storedAccounts]);
+
+  const deleteProfile = useCallback(async () => {
+    if (!user) return false;
+    if (user.isAdmin) return false;
+
+    const existsInStored = storedAccounts.some((account) => account.id === user.id);
+    if (!existsInStored) {
+      return false;
+    }
+
+    const success = await deleteUser(user.id);
+    if (success) {
+      setUser(null);
+      try {
+        await AsyncStorage.removeItem(STORAGE_USER_KEY);
+      } catch {
+        // ignore
+      }
+    }
+    return success;
+  }, [deleteUser, storedAccounts, user]);
+
   const loginWithId = useCallback(async (id) => {
     const found = users.find((u) => u.id === id);
     if (!found) return false;
@@ -95,38 +123,7 @@ export function AuthProvider({ children }) {
     }
   }, [users]);
 
-  const register = useCallback(async (name, email, password) => {
-    const normalizedEmail = normalizeEmail(email);
-    if (!name.trim() || !normalizedEmail || !password) {
-      return false;
-    }
-
-    const exists = users.some((u) => u.email.toLowerCase() === normalizedEmail);
-    if (exists) {
-      return false;
-    }
-
-    const newUser = {
-      id: createUserId(normalizedEmail),
-      name: name.trim(),
-      email: normalizedEmail,
-      password,
-    };
-
-    const nextAccounts = [...storedAccounts, newUser];
-    const persisted = await persistAccounts(nextAccounts);
-    if (!persisted) {
-      return false;
-    }
-
-    try {
-      await AsyncStorage.setItem(STORAGE_USER_KEY, newUser.id);
-      setUser(newUser);
-      return true;
-    } catch {
-      return false;
-    }
-  }, [storedAccounts, users, persistAccounts]);
+  const register = useCallback(async () => false, []);
 
   const logout = useCallback(async () => {
     setUser(null);
@@ -144,8 +141,10 @@ export function AuthProvider({ children }) {
     loginWithEmail,
     register,
     logout,
+    deleteUser,
+    deleteProfile,
     loading,
-  }), [user, users, loginWithId, loginWithEmail, register, logout, loading]);
+  }), [user, users, loginWithId, loginWithEmail, register, logout, deleteUser, deleteProfile, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

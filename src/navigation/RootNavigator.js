@@ -2,35 +2,57 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet, Platform } from 'react-native';
-import { COLORS, SHADOW } from '../theme';import SavingsTracker from '../screens/SavingsTracker';
-
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { COLORS, SHADOW } from '../theme';
+import SavingsTracker from '../screens/SavingsTracker';
+import GamesScreen    from '../screens/GamesScreen';
 
 import HomeScreen      from '../screens/HomeScreen';
 import TasksScreen     from '../screens/TasksScreen';
 import DatesScreen     from '../screens/DatesScreen';
 import ChatScreen      from '../screens/ChatScreen';
 import UsScreen        from '../screens/UsScreen';
+import AdminScreen     from '../screens/AdminScreen';
+import { useAuth } from '../context/AuthContext';
 
 const Tab = createBottomTabNavigator();
 
 const TABS = [
-  { name: 'Home',  label: 'Home',  icon: '🏠', screen: HomeScreen  },
-  { name: 'Tasks', label: 'Tasks', icon: '✅', screen: TasksScreen },
-  { name: 'Dates', label: 'Dates', icon: '📅', screen: DatesScreen },
-  { name: 'Chat',  label: 'Chat',  icon: '💬', screen: ChatScreen  },
-  { name: 'Us',    label: 'Us',    icon: '❤️', screen: UsScreen    },
+  { name: 'Home',  label: 'Home',  icon: 'home-outline',         screen: HomeScreen  },
+  { name: 'Games', label: 'Games', icon: 'cards-heart-outline',  screen: GamesScreen },
+  { name: 'Tasks', label: 'Tasks', icon: 'clipboard-text-outline', screen: TasksScreen },
+  { name: 'Dates', label: 'Dates', icon: 'calendar-month-outline', screen: DatesScreen },
+  { name: 'Chat',  label: 'Chat',  icon: 'chat-outline',          screen: ChatScreen  },
+  { name: 'Us',    label: 'Profile', icon: 'account-circle-outline', screen: UsScreen    },
 ];
 
 function TabIcon({ icon, label, focused }) {
   return (
     <View style={styles.tabItem}>
-      <Text style={[styles.tabIcon, focused && styles.tabIconFocused]}>{icon}</Text>
+      <MaterialCommunityIcons
+        name={icon}
+        size={22}
+        color={focused ? COLORS.rose : COLORS.subtle}
+        style={styles.tabIcon}
+      />
       <Text style={[styles.tabLabel, focused && styles.tabLabelFocused]}>{label}</Text>
     </View>
   );
 }
 
 export default function RootNavigator() {
+  const { user } = useAuth();
+  const tabs = [...TABS];
+
+  if (user?.isAdmin) {
+    tabs.push({
+      name: 'Admin',
+      label: 'Admin',
+      icon: 'shield-account-outline',
+      screen: AdminScreen,
+    });
+  }
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -39,7 +61,7 @@ export default function RootNavigator() {
         tabBarShowLabel: false,
       }}
     >
-      {TABS.map(({ name, label, icon, screen }) => (
+      {tabs.map(({ name, label, icon, screen }) => (
         <Tab.Screen
           key={name}
           name={name}
@@ -50,7 +72,6 @@ export default function RootNavigator() {
             ),
           }}
         />
-        
       ))}
       <Tab.Screen name="Savings" component={SavingsTracker} />
     </Tab.Navigator>

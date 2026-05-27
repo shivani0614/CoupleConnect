@@ -3,6 +3,7 @@ import React from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, TextInput,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, SPACING, RADIUS, SHADOW, FONTS } from '../theme';
 
@@ -40,7 +41,11 @@ export function GhostBtn({ title, onPress, style }) {
 export function Pill({ children, icon, style }) {
   return (
     <View style={[styles.pill, style]}>
-      {icon ? <Text style={{ fontSize: 11 }}>{icon}</Text> : null}
+      {icon ? (
+        typeof icon === 'string'
+          ? <MaterialCommunityIcons name={icon} size={12} color="#fff" style={styles.pillIcon} />
+          : icon
+      ) : null}
       <Text style={styles.pillTxt}>{children}</Text>
     </View>
   );
@@ -92,13 +97,18 @@ export function ActivityBtn({ icon, name, desc, color, onPress }) {
 }
 
 // ── Header ────────────────────────────────────────────────────────────────────
-export function AppHeader({ name1, name2, subtitle, pills, rightLabel, rightValue }) {
+export function AppHeader({ iconName = 'heart-circle-outline', name1, name2, subtitle, pills, rightLabel, rightValue }) {
   return (
     <LinearGradient colors={COLORS.headerGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.header}>
       <View style={styles.headerRow}>
-        <View>
-          <Text style={styles.headerNames}>💍 {name1} &amp; {name2}</Text>
-          <Text style={styles.headerSub}>{subtitle}</Text>
+        <View style={styles.headerTitleRow}>
+          <View style={styles.headerIconWrap}>
+            <MaterialCommunityIcons name={iconName} size={24} color="#fff" />
+          </View>
+          <View>
+            <Text style={styles.headerNames}>{name1} &amp; {name2}</Text>
+            <Text style={styles.headerSub}>{subtitle}</Text>
+          </View>
         </View>
         {rightLabel ? (
           <View style={styles.headerRight}>
@@ -110,7 +120,7 @@ export function AppHeader({ name1, name2, subtitle, pills, rightLabel, rightValu
       {pills?.length ? (
         <View style={styles.pillRow}>
           {pills.map((p, i) => (
-            <Pill key={i} icon={p.icon}>{p.text}</Pill>
+            <Pill key={i}>{p.text}</Pill>
           ))}
         </View>
       ) : null}
@@ -173,7 +183,6 @@ const styles = StyleSheet.create({
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
     backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: RADIUS.full,
     paddingVertical: 4,
@@ -183,6 +192,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 11,
     fontWeight: '400',
+  },
+  pillIcon: {
+    fontSize: 11,
+    marginRight: 4,
   },
   statCard: {
     backgroundColor: COLORS.roseLight,
@@ -269,6 +282,19 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: SPACING.md,
   },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: SPACING.sm,
+  },
   headerNames: {
     fontSize: 22,
     fontWeight: '700',
@@ -295,7 +321,6 @@ const styles = StyleSheet.create({
   },
   pillRow: {
     flexDirection: 'row',
-    gap: SPACING.sm,
     flexWrap: 'wrap',
   },
 });

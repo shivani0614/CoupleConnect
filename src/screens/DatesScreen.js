@@ -6,8 +6,9 @@ import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { COLORS, SPACING, RADIUS, SHADOW } from '../theme';
-import { SPECIAL_DATES, DATE_IDEAS, GIFT_OPTIONS, COUPLE } from '../data';
+import { SPECIAL_DATES, DATE_IDEAS, GIFT_OPTIONS, COUPLE, getPartnerName } from '../data';
 import { useCouple } from '../context/CoupleContext';
+import { useAuth } from '../context/AuthContext';
 import { AppHeader, SLabel, GhostBtn, ActivityBtn } from '../components/UI';
 import { Linking } from 'react-native';
 
@@ -18,7 +19,9 @@ function daysUntil(date) {
 export default function DatesScreen() {
   const insets = useSafeAreaInsets();
   const nav    = useNavigation();
+  const { user } = useAuth();
   const { sendMessage } = useCouple();
+  const partnerName = getPartnerName(user?.name);
 
   const visitDays = daysUntil(COUPLE.nextVisit);
 
@@ -43,7 +46,7 @@ export default function DatesScreen() {
   return (
     <View style={styles.root}>
       <AppHeader
-        name1={COUPLE.name1} name2={COUPLE.name2}
+        name1={user?.name || COUPLE.name1} name2={partnerName}
         subtitle="Special dates & date night ideas"
         rightLabel="Visit in"
         rightValue={`${visitDays} days`}

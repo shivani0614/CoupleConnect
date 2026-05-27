@@ -1,12 +1,16 @@
 import React from 'react';
-import { View, ActivityIndicator, Text } from 'react-native';
+import { View, ActivityIndicator, Text, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
 import RootNavigator from './src/navigation/RootNavigator';
 import LoginScreen from './src/screens/LoginScreen';
+import LandingScreen from './src/screens/LandingScreen';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { CoupleProvider } from './src/context/CoupleContext';
+
+const Stack = createStackNavigator();
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -21,7 +25,14 @@ function AppContent() {
   }
 
   if (!user) {
-    return <LoginScreen />;
+    return (
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Landing">
+          <Stack.Screen name="Landing" component={LandingScreen} />
+          <Stack.Screen name="Login" component={LoginScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    );
   }
 
   return (

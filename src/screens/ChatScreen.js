@@ -6,16 +6,25 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { COLORS, SPACING, RADIUS, SHADOW } from '../theme';
-import { COUPLE } from '../data';
+import { COUPLE, getPartnerName } from '../data';
 import { useCouple } from '../context/CoupleContext';
+import { useAuth } from '../context/AuthContext';
 import { AppHeader, AppInput } from '../components/UI';
 
-const QUICK_EMOJIS = ['💍', '❤️', '🥺', '😍', '🌙', '🌸', '🤗', '✨', '😘', '💕'];
+const QUICK_RESPONSES = [
+  { icon: 'hand-heart', label: 'Warm hug', text: 'Sending love your way.' },
+  { icon: 'heart', label: 'Miss you', text: 'Can’t wait to see you.' },
+  { icon: 'star', label: 'You shine', text: 'You brighten my day.' },
+  { icon: 'gift', label: 'Surprise', text: 'I have a little plan for us.' },
+  { icon: 'calendar-heart', label: 'Date night', text: 'Let’s plan something special.' },
+];
 
 export default function ChatScreen() {
   const insets   = useSafeAreaInsets();
+  const { user } = useAuth();
   const { messages, sendMessage } = useCouple();
   const [input, setInput] = useState('');
   const listRef  = useRef(null);
@@ -45,6 +54,8 @@ export default function ChatScreen() {
     </View>
   );
 
+  const partnerName = getPartnerName(user?.name);
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -53,9 +64,10 @@ export default function ChatScreen() {
     >
       <View style={styles.root}>
         <AppHeader
-          name1={COUPLE.name1} name2={COUPLE.name2}
+          name1={user?.name || COUPLE.name1}
+          name2={partnerName}
           subtitle="Chat with your partner"
-          pills={[{ icon: '🟢', text: 'Online now' }]}
+          pills={[{ icon: 'circle', text: 'Online now' }]}
         />
 
         <FlatList
@@ -69,20 +81,23 @@ export default function ChatScreen() {
         />
 
         <View style={[styles.inputArea, { paddingBottom: insets.bottom + 8 }]}>
-          {/* Quick emojis */}
           <ScrollView
             horizontal showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.emojiRow}
-            style={{ marginBottom: 8 }}
+            contentContainerStyle={styles.quickRow}
+            style={{ marginBottom: 12 }}
           >
-            {QUICK_EMOJIS.map(e => (
-              <TouchableOpacity key={e} style={styles.emojiBtn} onPress={() => sendMessage(e)}>
-                <Text style={{ fontSize: 22 }}>{e}</Text>
+            {QUICK_RESPONSES.map((item) => (
+              <TouchableOpacity
+                key={item.label}
+                style={styles.quickBtn}
+                onPress={() => sendMessage(item.text)}
+              >
+                <MaterialCommunityIcons name={item.icon} size={18} color={COLORS.roseDark} />
+                <Text style={styles.quickLabel}>{item.label}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
 
-          {/* Input row */}
           <View style={styles.inputRow}>
             <AppInput
               value={input}
@@ -158,15 +173,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     ...SHADOW.md,
   },
-  emojiRow: { paddingHorizontal: 2, gap: 6 },
-  emojiBtn: {
-    width: 40, height: 40,
-    backgroundColor: COLORS.bg,
-    borderRadius: RADIUS.md,
+  quickRow: { paddingHorizontal: 2, gap: 8 },
+  quickBtn: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: COLORS.bg,
+    borderRadius: RADIUS.full,
     borderWidth: 1,
     borderColor: COLORS.border,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    gap: 8,
+  },
+  quickLabel: {
+    fontSize: 12,
+    color: COLORS.roseDark,
+    fontWeight: '600',
   },
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   sendBtn:  { width: 44, height: 44, borderRadius: 22, overflow: 'hidden' },

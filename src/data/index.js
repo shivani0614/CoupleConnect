@@ -14,6 +14,12 @@ export const COUPLE = {
   streakDays:   31,
 };
 
+export function getPartnerName(userName) {
+  if (userName === COUPLE.name1) return COUPLE.name2;
+  if (userName === COUPLE.name2) return COUPLE.name1;
+  return COUPLE.name2;
+}
+
 export const QUESTIONS = [
   "What's one thing I did this week that made you feel loved without realising it?",
   "If we could relive one day from our marriage, which would you pick?",

@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { COLORS, SPACING, RADIUS, SHADOW } from '../theme';
-import { COUPLE } from '../data';
+import { COUPLE, getPartnerName } from '../data';
 import { useAuth } from '../context/AuthContext';
 import { useCouple } from '../context/CoupleContext';
 import { AppHeader, Card, SLabel, PrimaryBtn, GhostBtn, StatCard } from '../components/UI';
@@ -30,17 +30,33 @@ function NoteCard({ note, onLongPress }) {
 
 export default function UsScreen() {
   const insets = useSafeAreaInsets();
-  const { user, logout } = useAuth();
+  const { user, logout, deleteProfile } = useAuth();
   const { notes, addNote } = useCouple();
+  const partnerName = getPartnerName(user?.name);
+  const myName = user?.name || COUPLE.name1;
+  const myCity = user?.name === COUPLE.name2 ? COUPLE.city2 : COUPLE.city1;
+  const partnerCity = user?.name === COUPLE.name2 ? COUPLE.city1 : COUPLE.city2;
 
   const [modalVisible, setModalVisible] = useState(false);
   const [noteText, setNoteText] = useState('');
+  const [feedbackVisible, setFeedbackVisible] = useState(false);
+  const [feedbackText, setFeedbackText] = useState('');
 
   const handlePost = () => {
     if (!noteText.trim()) return;
     addNote(noteText.trim(), user.name);
     setNoteText('');
     setModalVisible(false);
+  };
+
+  const handleSubmitFeedback = () => {
+    if (!feedbackText.trim()) {
+      Alert.alert('Feedback', 'Please enter your message.');
+      return;
+    }
+    setFeedbackText('');
+    setFeedbackVisible(false);
+    Alert.alert('Thanks!', 'Your feedback has been received.');
   };
 
   const handleLongNote = () => {
@@ -53,18 +69,45 @@ export default function UsScreen() {
   return (
     <View style={styles.root}>
       <AppHeader
-        name1={COUPLE.name1} name2={COUPLE.name2}
+        name1={user?.name || COUPLE.name1} name2={partnerName}
         subtitle="Your love story, milestones & distance"
         rightLabel="Apart"
         rightValue={`${COUPLE.distanceKm.toLocaleString()} km`}
       />
 
       <View style={styles.logoutRow}>
-        <Text style={styles.logoutLabel}>Logged in as {user}</Text>
+        <Text style={styles.logoutLabel}>Logged in as {user?.name || user?.email}</Text>
         <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
           <Text style={styles.logoutBtnText}>Logout</Text>
         </TouchableOpacity>
       </View>
+      <Card style={styles.profileCard}>
+        <Text style={styles.profileCardTitle}>Profile</Text>
+        <Text style={styles.profileName}>{user?.name}</Text>
+        <Text style={styles.profileEmail}>{user?.email}</Text>
+        <View style={styles.profileActions}>
+          <GhostBtn title="Send feedback" onPress={() => setFeedbackVisible(true)} style={styles.profileActionBtn} />
+          {!user?.isAdmin ? (
+            <GhostBtn
+              title="Delete account"
+              onPress={() => {
+                Alert.alert(
+                  'Delete profile',
+                  'This will remove your account permanently. Continue?',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Delete', style: 'destructive', onPress: deleteProfile },
+                  ],
+                );
+              }}
+              style={styles.profileActionBtn}
+            />
+          ) : null}
+        </View>
+        {user?.isAdmin ? (
+          <Text style={styles.adminHint}>Admin accounts cannot be deleted from this screen.</Text>
+        ) : null}
+      </Card>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={{ paddingBottom: insets.bottom + 90, paddingHorizontal: SPACING.lg }}
@@ -81,14 +124,20 @@ export default function UsScreen() {
           <Text style={styles.addNoteTxt}>✏️  Write a love note</Text>
         </TouchableOpacity>
 
+        <Card style={styles.feedbackCard}>
+          <Text style={styles.feedbackTitle}>Feedback</Text>
+          <Text style={styles.feedbackDescription}>Share your experience with CoupleConnect so we can make it better.</Text>
+          <PrimaryBtn title="Leave feedback" onPress={() => setFeedbackVisible(true)} />
+        </Card>
+
         {/* Distance */}
         <SLabel>Distance between us</SLabel>
         <Card>
           <View style={styles.distRow}>
             <View style={styles.distCity}>
               <Text style={styles.distPin}>📍</Text>
-              <Text style={styles.distCityName}>{COUPLE.city1}</Text>
-              <Text style={styles.distCitySub}>{COUPLE.name1} · EST</Text>
+              <Text style={styles.distCityName}>{myCity}</Text>
+              <Text style={styles.distCitySub}>{myName} · EST</Text>
             </View>
             <View style={styles.distMid}>
               <Text style={styles.distArrow}>↔</Text>
@@ -96,8 +145,8 @@ export default function UsScreen() {
             </View>
             <View style={styles.distCity}>
               <Text style={styles.distPin}>📍</Text>
-              <Text style={styles.distCityName}>{COUPLE.city2}</Text>
-              <Text style={styles.distCitySub}>{COUPLE.name2} · EST</Text>
+              <Text style={styles.distCityName}>{partnerCity}</Text>
+              <Text style={styles.distCitySub}>{partnerName} · EST</Text>
             </View>
           </View>
 
@@ -189,6 +238,28 @@ export default function UsScreen() {
           </View>
         </View>
       </Modal>
+
+      <Modal visible={feedbackVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Send feedback</Text>
+            <TextInput
+              style={styles.modalInput}
+              multiline
+              numberOfLines={4}
+              placeholder="Tell us what you love or what should improve..."
+              placeholderTextColor={COLORS.subtle}
+              value={feedbackText}
+              onChangeText={setFeedbackText}
+              autoFocus
+            />
+            <View style={styles.modalBtns}>
+              <GhostBtn title="Cancel" onPress={() => { setFeedbackVisible(false); setFeedbackText(''); }} />
+              <PrimaryBtn title="Submit" onPress={handleSubmitFeedback} />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -241,6 +312,64 @@ const styles = StyleSheet.create({
     alignItems: 'center', marginBottom: SPACING.md,
   },
   addNoteTxt: { fontSize: 13, color: COLORS.rose, fontWeight: '500' },
+  profileCard: {
+    marginHorizontal: SPACING.lg,
+    marginVertical: SPACING.md,
+    borderRadius: RADIUS.xl,
+    padding: SPACING.lg,
+    backgroundColor: COLORS.surface,
+    ...SHADOW.sm,
+  },
+  profileCardTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.ink,
+    marginBottom: SPACING.sm,
+  },
+  profileName: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: COLORS.ink,
+    marginBottom: 4,
+  },
+  profileEmail: {
+    fontSize: 12,
+    color: COLORS.subtle,
+    marginBottom: SPACING.lg,
+  },
+  profileActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    gap: SPACING.sm,
+    flexWrap: 'wrap',
+  },
+  profileActionBtn: {
+    width: 160,
+  },
+  adminHint: {
+    marginTop: SPACING.sm,
+    fontSize: 11,
+    color: COLORS.muted,
+  },
+  feedbackCard: {
+    borderRadius: RADIUS.xl,
+    backgroundColor: COLORS.surface,
+    padding: SPACING.lg,
+    marginBottom: SPACING.md,
+    ...SHADOW.sm,
+  },
+  feedbackTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.ink,
+    marginBottom: SPACING.sm,
+  },
+  feedbackDescription: {
+    fontSize: 13,
+    color: COLORS.muted,
+    lineHeight: 20,
+    marginBottom: SPACING.md,
+  },
 
   distRow:      { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.md },
   distCity:     { flex: 1, alignItems: 'center' },
