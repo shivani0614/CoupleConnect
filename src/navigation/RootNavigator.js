@@ -5,7 +5,7 @@ import { View, Text, StyleSheet, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SHADOW } from '../theme';
 import SavingsTracker from '../screens/SavingsTracker';
-import GamesScreen    from '../screens/GamesScreen';
+import GamesStack from '../navigation/GamesStack';
 
 import HomeScreen      from '../screens/HomeScreen';
 import TasksScreen     from '../screens/TasksScreen';
@@ -20,8 +20,8 @@ import { useAuth } from '../context/AuthContext';
 const Tab = createBottomTabNavigator();
 
 const TABS = [
-  { name: 'Home',  label: 'Home',  icon: 'home-outline',         screen: HomeScreen  },
-  { name: 'Games', label: 'Games', icon: 'cards-heart-outline',  screen: GamesScreen },
+  { name: 'Home',  label: 'Home',  icon: 'home-outline', screen: HomeScreen  },
+  { name: 'Games', label: 'Games', icon: 'cards-heart-outline', screen: GamesStack },
   { name: 'Tasks', label: 'Tasks', icon: 'clipboard-text-outline', screen: TasksScreen },
   { name: 'Dates', label: 'Dates', icon: 'calendar-month-outline', screen: DatesScreen },
   { name: 'Chat',  label: 'Chat',  icon: 'chat-outline',          screen: ChatScreen  },
